@@ -1,0 +1,16 @@
+{
+  "name": "socket-chat-example",
+  "version": "0.0.1",
+  "description": "socket.io app",
+  "license": "ISC",
+  "author": "Yelyzaveta Omelich",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --watch index"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}
