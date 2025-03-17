@@ -7,7 +7,6 @@ import {
   useState,
 } from 'react';
 import { Socket } from 'socket.io-client';
-import { v4 as uuidv4 } from 'uuid';
 import { Message } from '../types';
 
 type SocketContextType = {
@@ -63,18 +62,17 @@ export const SocketProvider = ({
     socket.on('onlineUsers', updateOnlineUsers);
     socket.on('typing', ({ userId, nickname }) => handleTyping(userId, nickname));
     socket.on('stopTyping', (userId) => handleStopTyping(userId))
+    socket.on('session', ({ userId }) => handleSession(userId));
 
     function handleConnect() {
       console.log('Connected to server, socket ID:', socket.id);
       updateSocketId(socket?.id || null);
 
-      const id = uuidv4();
-
-      sessionStorage.setItem('userId', id);
+      const id = sessionStorage.getItem('userId');
 
       console.log({ currentRoom, id });
       // if reconnection after disconnecting
-      if (currentRoom && currentRoom !== undefined) {
+      if (currentRoom && currentRoom !== undefined && id) {
         socket.emit('joinRoom', { room: currentRoom, userId: id, username });
       }
     }
@@ -109,6 +107,13 @@ export const SocketProvider = ({
       }
     }
 
+    function handleSession(userId: string) {
+      if (!sessionStorage.getItem('userId')) {
+        sessionStorage.setItem('userId', userId);
+        console.log(`Received new userId from server: ${userId}`);
+      }
+    }
+
     return () => {
       console.log('Cleaning up socket...');
       socket.off('connect', handleConnect);
@@ -118,7 +123,8 @@ export const SocketProvider = ({
       socket.off('error', errorHandler);
       socket.off('onlineUsers', updateOnlineUsers);
       socket.off('typing',handleTyping);
-      socket.off('stopTyping', handleStopTyping)
+      socket.off('stopTyping', handleStopTyping);
+      socket.off('handleSession', handleSession);
     };
   }, []);
 
@@ -130,8 +136,8 @@ export const SocketProvider = ({
       ? sessionStorage.setItem('currentRoom', room)
       : sessionStorage.removeItem('currentRoom');
 
-    if (!userId || !room) return;
     console.log({ userId, username });
+    if (!userId || !room) return;
     room && socket.emit('joinRoom', { room, userId });
   }
 

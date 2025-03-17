@@ -27,6 +27,19 @@ const userProfiles = {}; // {userid1: {nickname}, ...}
 io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
 
+  let userId = socket.handshake.auth?.userId;
+
+  if (!userId || !userToSocket[userId]) {
+    userId = `user-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`Generated new userId: ${userId}`);
+
+    socket.emit('session', { userId });
+  } else {
+    console.log(`Reconnected user with userId: ${userId}`);
+  }
+
+  userToSocket[userId] = socket.id;
+
   socket.emit('availableRooms', availableRooms);
 
   socket.on('joinRoom', ({ room, userId, username }) => {
