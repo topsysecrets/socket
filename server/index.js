@@ -4,7 +4,10 @@ import { Server } from 'socket.io';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: 'http://localhost:5173' } });
+const io = new Server(server, {
+  cors: { origin: 'http://localhost:5173' },
+  transports: ['websocket'],
+});
 
 const availableRooms = ['room 1', 'room 2', 'room 3', 'room 4'];
 const events = [
@@ -102,7 +105,7 @@ io.on('connection', (socket) => {
       const nickname = userProfiles[userId]?.nickname || null;
       onlineUsers.push([userId, nickname]);
     }
-  
+
     io.emit('onlineUsers', onlineUsers);
 
     // // update nickname in messages
@@ -137,7 +140,7 @@ io.on('connection', (socket) => {
       userId,
       msg,
       timestamp: Date.now(),
-      nickname: userProfiles[userId]?.nickname || null
+      nickname: userProfiles[userId]?.nickname || null,
     };
 
     if (!messagesInRooms[room]) messagesInRooms[room] = [];
@@ -185,7 +188,7 @@ io.on('connection', (socket) => {
       console.error('User is not in the room!');
       return;
     }
-    console.log('stop typing')
+    console.log('stop typing');
     io.to(userRoom).emit('stopTyping', userId);
   });
 
